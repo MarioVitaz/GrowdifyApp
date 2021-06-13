@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+
+    android:id="@+id/mainLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:layout_weight="1"
+    android:animateLayoutChanges="false"
+    android:animationCache="false"
+    android:background="#494848"
+    android:backgroundTint="#494848"
+    android:orientation="vertical"
+    android:padding="10dp"
+    tools:context=".SetingsActivity">
+
+    <ImageButton
+        android:id="@+id/buttonBack"
+        android:layout_width="67dp"
+        android:layout_height="58dp"
+        android:backgroundTint="#ACABAB"
+        android:src="@drawable/ic_back"
+        android:tint="#4CAF50" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:letterSpacing="0.4"
+        android:text="Setings"
+        android:textColor="@android:color/secondary_text_dark_nodisable"
+        android:textSize="35dp" />
+
+    <CheckBox
+        android:id="@+id/checkBoxAto"
+        android:layout_width="wrap_content"
+        android:layout_height="72dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="55dp"
+        android:buttonTint="#ACABAB"
+        android:text="Automatický režim"
+        android:textColor="@android:color/secondary_text_dark"
+        android:textSize="25dp"
+        android:checked="true"
+        tools:layout_editor_absoluteX="67dp"
+        tools:layout_editor_absoluteY="214dp" />
+
+    <CheckBox
+        android:id="@+id/checkBoxTime"
+        android:layout_width="wrap_content"
+        android:layout_height="72dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="130dp"
+        android:buttonTint="#ACABAB"
+        android:text="Čas polievania"
+        android:textColor="@android:color/secondary_text_dark"
+        android:textSize="25dp"
+        tools:layout_editor_absoluteX="67dp"
+        tools:layout_editor_absoluteY="214dp" />
+
+
+
+<!--    <Button-->
+<!--        android:id="@+id/selectMinTime"-->
+<!--        android:layout_width="175dp"-->
+<!--        android:layout_height="74dp"-->
+<!--        android:layout_marginLeft="15dp"-->
+<!--        android:layout_marginTop="240dp"-->
+<!--        android:background="#504E4E"-->
+<!--        android:backgroundTint="@color/black"-->
+<!--        app:rippleColor="#656565"-->
+<!--        android:text="Od"-->
+<!--        android:onClick="selectMinTime"-->
+<!--         />-->
+
+    <Button
+        android:id="@+id/selectMinTime"
+        android:layout_width="175dp"
+        android:layout_height="74dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginTop="240dp"
+
+        android:onClick="selectMinTime"
+        android:text="Od" />
+
+    <Button
+        android:id="@+id/selectMaxTime"
+        android:layout_width="175dp"
+        android:layout_height="74dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="240dp"
+        android:layout_toRightOf="@+id/selectMinTime"
+        android:onClick="selectMaxTime"
+        android:text="Do" />
+
+<!--    <Button-->
+<!--        android:id="@+id/selectMinTimeLight"-->
+<!--        android:layout_width="175dp"-->
+<!--        android:layout_height="74dp"-->
+<!--        android:layout_marginLeft="15dp"-->
+<!--        android:layout_marginTop="430dp"-->
+<!--        android:background="#504E4E"-->
+<!--        android:backgroundTint="@color/black"-->
+<!--        android:onClick="selectMinTimeLight"-->
+<!--        android:text="Od"-->
+<!--        app:rippleColor="#656565" />-->
+    <Button
+        android:id="@+id/selectMinTimeLight"
+        android:layout_width="175dp"
+        android:layout_height="74dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginTop="430dp"
+        android:onClick="selectMinTimeLight"
+        android:text="Do" />
+    <Button
+        android:id="@+id/selectMaxTimeLight"
+        android:layout_width="175dp"
+        android:layout_height="74dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="430dp"
+        android:layout_toRightOf="@+id/selectMinTimeLight"
+        android:onClick="selectMaxTimeLight"
+        android:text="Do" />
+
+
+    <CheckBox
+        android:id="@+id/checkBoxTimeLight"
+        android:layout_width="wrap_content"
+        android:layout_height="72dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="320dp"
+        android:buttonTint="#ACABAB"
+        android:text="Čas osvetlenia"
+        android:textColor="@android:color/secondary_text_dark"
+        android:textSize="25dp"
+        tools:layout_editor_absoluteX="67dp"
+        tools:layout_editor_absoluteY="214dp" />
+
+
+
+
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="390dp"
+        android:text="Osvetlenie od-do"
+        android:textColor="@android:color/secondary_text_dark"
+        android:textSize="25dp" />
+
+    <TextView
+        android:id="@+id/textView9"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="310dp"
+        android:layout_marginTop="580dp"
+        android:text="min"
+        android:textColor="@android:color/secondary_text_dark"
+        android:textSize="25dp" />
+
+    <TextView
+        android:id="@+id/textView10"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="580dp"
+        android:text="Doba aktualizácie"
+        android:textColor="@android:color/secondary_text_dark"
+        android:textSize="25dp" />
+
+    <TextView
+        android:id="@+id/textView5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="205dp"
+        android:textSize="25dp"
+        android:layout_centerHorizontal="true"
+        android:textColor="@android:color/secondary_text_dark"
+        android:text="Polievanie od-do" />
+
+    <NumberPicker
+        android:id="@+id/numberPicker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="17dp"
+        android:layout_marginTop="510dp"
+        android:layout_toRightOf="@+id/textView10" />
+
+</RelativeLayout>
+

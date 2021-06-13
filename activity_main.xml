@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+
+    android:id="@+id/mainLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:layout_weight="1"
+    android:animateLayoutChanges="false"
+    android:animationCache="false"
+    android:background="#494848"
+    android:orientation="vertical"
+    android:padding="10dp"
+    tools:context=".MainActivity">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <Button
+                android:id="@+id/btn_sub"
+                android:layout_width="406dp"
+                android:layout_height="58dp"
+                android:layout_marginTop="850dp"
+                android:text="Connect to Mqtt"
+                tools:layout_editor_absoluteX="175dp"
+                tools:layout_editor_absoluteY="472dp" />
+
+            <Button
+                android:id="@+id/buttonTemperatureChart"
+                android:layout_width="393dp"
+                android:layout_height="35dp"
+                android:layout_marginTop="1000dp"
+                android:text="@string/temperature" />
+
+            <TextView
+                android:id="@+id/textOptimalHumidity"
+                android:layout_width="304dp"
+                android:layout_height="39dp"
+                android:layout_marginTop="60dp"
+                android:text="Požadovaná vlhkosť"
+                android:textSize="20dp" />
+
+            <ImageButton
+                android:id="@+id/buttonRefresh"
+                android:layout_width="64dp"
+                android:layout_height="59dp"
+                android:onClick="refresh"
+                android:layout_toRightOf="@+id/textView2"
+                android:src="@drawable/ic_refresh" />
+
+            <ImageButton
+                android:id="@+id/buttonlight"
+                android:layout_width="64dp"
+                android:layout_height="59dp"
+
+                android:layout_marginTop="60dp"
+                android:layout_toRightOf="@+id/textView2"
+                android:onClick="light"
+                android:src="@drawable/ic_light" />
+
+            <ImageButton
+                android:id="@+id/buttonSetings"
+                android:layout_width="64dp"
+                android:layout_height="59dp"
+                android:layout_marginRight="-7dp"
+                android:layout_toLeftOf="@+id/textView2"
+                android:src="@drawable/ic_setings" />
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="143dp"
+                android:layout_height="33dp"
+
+                android:layout_marginTop="100dp"
+                android:text="TextView" />
+
+            <TextView
+                android:id="@+id/textView3"
+                android:layout_width="143dp"
+                android:layout_height="31dp"
+                android:layout_marginLeft="16dp"
+                android:layout_marginTop="100dp"
+                android:layout_toRightOf="@+id/textView"
+                android:text="TextView" />
+
+            <com.jjoe64.graphview.GraphView
+                android:id="@+id/graphhum1"
+                android:layout_width="match_parent"
+                android:layout_height="155dp"
+                android:layout_marginTop="400dp" />
+
+            <com.jjoe64.graphview.GraphView
+                android:id="@+id/grapTemerature"
+                android:layout_width="match_parent"
+                android:layout_height="155dp"
+                android:layout_marginTop="590dp" />
+
+<!--            <com.jjoe64.graphview.GraphView-->
+<!--                android:id="@+id/graphhum5"-->
+<!--                android:layout_width="65dp"-->
+<!--                android:layout_height="157dp"-->
+<!--                android:layout_marginTop="123dp"-->
+
+<!--                android:layout_toRightOf="@+id/buttonPour2" />-->
+
+            <!--    <com.jjoe64.graphview.GraphView-->
+            <!--        android:id="@+id/graphHum2"-->
+            <!--        android:layout_width="203dp"-->
+            <!--        android:layout_height="154dp"-->
+            <!--        android:layout_marginLeft="16dp"-->
+            <!--        android:layout_marginTop="140dp"-->
+            <!--        android:layout_toRightOf="@+id/graphhum1" />-->
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:letterSpacing="0.4"
+                android:text="Growdify"
+                android:textSize="35dp" />
+
+
+            <!--    <com.ekn.gruzer.gaugelibrary.HalfGauge-->
+            <!--        android:id="@+id/halfGaugeHum1"-->
+            <!--        android:layout_width="190dp"-->
+            <!--        android:layout_height="175dp"-->
+            <!--        android:layout_marginTop="110dp" />-->
+
+            <!--    <com.ekn.gruzer.gaugelibrary.HalfGauge-->
+            <!--        android:id="@+id/halfGaugeHum2"-->
+            <!--        android:layout_width="190dp"-->
+            <!--        android:layout_height="175dp"-->
+            <!--        android:layout_marginLeft="28dp"-->
+            <!--        android:layout_marginTop="110dp"-->
+            <!--        android:layout_toRightOf="@+id/halfGaugeHum1" />-->
+
+            <SeekBar
+                android:id="@+id/seekBar"
+                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                android:layout_width="fill_parent"
+                android:layout_height="40dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="325dp"
+                android:layout_toRightOf="@+id/textOptimalHum"
+                android:max="100"
+                android:progress="3"
+                android:text="To pour 2" />
+
+            <de.nitri.gauge.Gauge
+                android:id="@+id/gauge"
+                android:layout_width="143dp"
+                android:layout_height="145dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="140dp"
+                app:lowerText="%"
+                android:layout_marginLeft="30dp"
+                app:lowerTextSize="35"
+                app:maxValue="100"
+                app:minValue="0"
+                app:totalNicks="140"
+                app:upperText="Sensor 1"
+                app:valuePerNick="1" />
+
+
+            <de.nitri.gauge.Gauge
+                android:id="@+id/gaugehum2"
+                android:layout_width="143dp"
+                android:layout_height="145dp"
+                android:layout_gravity="center"
+                android:layout_marginLeft="31dp"
+                android:layout_marginTop="140dp"
+                android:layout_toRightOf="@+id/gauge"
+                app:lowerText="%"
+                app:lowerTextSize="35"
+                app:maxValue="100"
+                app:minValue="0"
+                app:totalNicks="140"
+                app:upperText="Sensor 2"
+                app:valuePerNick="1" />
+
+            <Button
+                android:id="@+id/buttonPour1"
+                android:layout_width="143dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="30dp"
+                android:layout_marginTop="275dp"
+                android:onClick="pour1"
+                android:text="Poliať 1" />
+
+            <Button
+                android:id="@+id/buttonPour2"
+                android:layout_width="143dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="31dp"
+                android:layout_marginTop="275dp"
+                android:onClick="pour2"
+                android:layout_toRightOf="@+id/buttonPour1"
+                android:text="Poliať 2" />
+
+            <TextView
+                android:id="@+id/textOptimalHum"
+                android:layout_width="82dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="325dp"
+                android:text="%"
+                android:textSize="30dp" />
+
+            <TextView
+                android:id="@+id/textView6"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="370dp"
+                android:textSize="20dp"
+                android:text="Vlhkosť" />
+
+            <TextView
+                android:id="@+id/textView7"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="559dp"
+                android:text="Teplota"
+                android:textSize="20dp" />
+
+            <!--            <EditText-->
+            <!--                android:id="@+id/editTextTime"-->
+            <!--                android:layout_width="wrap_content"-->
+            <!--                android:layout_height="wrap_content"-->
+            <!--                android:ems="10"-->
+            <!--                android:inputType="time" />-->
+
+
+            <!--            <com.yuan.waveview.WaveView-->
+            <!--                android:id="@+id/waveview"-->
+            <!--                android:layout_width="97dp"-->
+            <!--                android:layout_height="104dp"-->
+            <!--                android:layout_marginLeft="13dp"-->
+            <!--                android:layout_marginTop="160dp"-->
+            <!--                android:layout_marginBottom="20dp"-->
+            <!--                android:layout_toRightOf="@+id/buttonPour2"-->
+            <!--                app:backgroundColor="@color/white"-->
+            <!--                app:max="100"-->
+
+            <!--                app:progressColor="@color/black" />-->
+
+        </RelativeLayout>
+    </ScrollView>
+</RelativeLayout>
