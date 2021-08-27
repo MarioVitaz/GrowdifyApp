@@ -1,0 +1,682 @@
+#include "WiFi.h" // ESP32 WiFi include
+//#include "WiFiConfig.h" // My WiFi configuration.
+#include<PubSubClient.h>
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include "DHT.h"
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#include "time.h"
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 32 // OLED display height, in pixels
+#define DHTTYPE DHT11
+//Name and pswd for Wifi connnection
+const char *SSID = "wifi dom";
+const char *WiFiPassword = "948767654";
+
+//Mqtt Broker IP address
+const char* mqtt_server = "192.168.241.245";
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+long lastMsg = 0;
+char msg[50];
+int value = 0;
+long lastMsg1 = 0;
+
+unsigned long interval1=10000;    // the time we need to wait
+unsigned long previousMillis1=0;
+
+unsigned long interval=1300;    // the time we need to wait
+unsigned long previousMillis=0;
+
+float soilTemperature     = 0;
+float soilHumidity1        = 0;
+float soilHumidity2        = 0;
+float airHumidity         = 0;
+float airTemperature      = 0;
+float airTemperatureCheck = 0;
+float soilTemperatureC    = 0;
+float temperatureF        = 0;
+int waitingTime           = 10000;
+float maxHumudity         = 4095;
+float optimalHumidity     = 4000;
+float hysteresis          = 0;
+
+bool lightAutomat = false;
+bool isAutomatic = true;
+bool isManualLight = true;
+bool isTimeAuto = false;
+
+int waterLevel            = -1;
+float opHum               = 50;
+bool getMsg = true;
+const int waterLevelSensor = 15;
+const int waterPump1       = 19;
+const int waterPump2       = 23;
+const int moistureSensor1  = 34;
+const int moistureSensor2  = 35;
+const int dht11pin         = 33;
+const int oneWireBus       = 32;
+const int blower           = 27;
+const int light            = 16;
+const int ledPin           =  2;
+const int dispSDA          = 21;
+const int dispSCL          = 22;
+
+String minTimeString = "";
+String maxTimeString = "";
+
+int minTime = 9999;
+int maxTime = 0;
+
+String minTimeLightString = "";
+String maxTimeLightString = "";
+
+int minTimeLight = 9999;
+int maxTimeLight = 0;
+
+String actualTimeString = "";
+int actualTime = 0;
+
+
+const char* ntpServer = "pool.ntp.org";
+const long  gmtOffset_sec = 3600;
+const int   daylightOffset_sec = 3600;
+
+String someText = "Hello world!";
+String successWifi = "Success connection!";
+DHT dht(dht11pin, DHTTYPE);
+OneWire oneWire(oneWireBus);
+DallasTemperature sensors(&oneWire);
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
+
+int stringToTime(String stringTime){
+  int finalTime = 0;
+  String finalString = "";
+  for(int i = 0; i < 5; i++ ){
+    if(i == 2){
+      continue;
+    }
+    finalString += stringTime.charAt(i);
+  }
+  
+  finalTime = finalString.toInt();
+  return finalTime;
+}
+
+void printLocalTime()
+{
+  struct tm timeinfo;
+  if(!getLocalTime(&timeinfo)){
+    Serial.println("Failed to obtain time");
+    return;
+  }
+  Serial.println(&timeinfo, "%H:%M");
+
+ 
+int current_hour = timeinfo.tm_hour;
+    int current_min = timeinfo.tm_min;
+actualTimeString = String(current_hour) + String(current_min);
+   actualTime = actualTimeString.toInt(); 
+   
+}
+
+void turnOnLight(){
+  digitalWrite(light,HIGH);
+}
+
+void turnOffLight(){
+  digitalWrite(light,LOW);
+}
+
+void ConnectToWifi()
+{
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(SSID, WiFiPassword);
+  Serial.print("Connecting to "); Serial.println(SSID);
+
+  uint8_t i = 0;
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    Serial.print("Try to connect to: ");
+    Serial.print(SSID);
+    delay(500);
+
+    if ((++i % 16) == 0)
+    {
+      Serial.println(F(" still trying to connect"));
+    }
+  }
+  Serial.println(successWifi);
+  Serial.println(F("Connected. My IP address is: "));
+  Serial.println(WiFi.localIP());
+  
+  digitalWrite(ledPin, HIGH);
+}
+
+void setIOpins() {
+  pinMode(waterLevelSensor, INPUT); //plavak
+  pinMode(waterPump1, OUTPUT);      //cerpadlo1
+  pinMode(waterPump2, OUTPUT);      //cerpadlo2
+  pinMode(moistureSensor1, INPUT);  //vlhkomer1
+  pinMode(moistureSensor2, INPUT);  //vlhkomer2
+  pinMode(ledPin, OUTPUT);
+  pinMode(light,OUTPUT);
+  pinMode(blower, OUTPUT);
+  pinMode(18,OUTPUT);
+  pinMode(21,OUTPUT);
+  pinMode(22,OUTPUT);
+  pinMode(23,OUTPUT);
+}
+
+float soilCheck(int senzor) {
+  float sensorValue = analogRead(senzor);
+  Serial.println(sensorValue);
+  int senzorNumber = 0;
+  if (senzor == 34) {
+    senzorNumber = 1;
+    Serial.println(String(senzorNumber) + ". senzor: " + String(sensorValue));
+  } else {
+    senzorNumber = 2;   
+    Serial.println(String(senzorNumber) + ". senzor: " + String(sensorValue));
+  }
+
+//if (sensorValue < (optimalHumidity - hysteresis)) {
+//  Serial.println(String(senzorNumber)+ ". senzor - Vlhkosť je dostatočná");
+//  return 0;
+//} else {
+//  Serial.println(String(senzorNumber)+ ". senzor - Treba poliat");
+//  return 1;
+//}
+return sensorValue;
+}
+
+bool waterLevelIndicator() {
+  bool waterState;
+  if ((waterState = digitalRead(waterLevelSensor)) == HIGH) {
+    Serial.println("Dostatok vody.");
+  } else {
+    Serial.println("Nedostatok vody!");
+
+  }
+  //Serial.println(waterState);
+
+  return waterState;
+}
+
+
+void soilTemerature() {
+  sensors.requestTemperatures();
+  soilTemperatureC = sensors.getTempCByIndex(0);
+  temperatureF = sensors.getTempFByIndex(0);
+  Serial.print(soilTemperatureC);
+  Serial.println("ºC");
+  Serial.print(temperatureF);
+  Serial.println("ºF");
+}
+
+void waterPumpOn(int waterPump) {
+  digitalWrite(waterPump, HIGH);
+  delay(1300);
+  digitalWrite(waterPump, LOW);
+  
+}
+
+void waterPumpOn2(){
+  digitalWrite(18, HIGH);
+  digitalWrite(21, HIGH);
+  digitalWrite(22, HIGH);
+  digitalWrite(23, HIGH);
+  
+  delay(1300);
+  
+  digitalWrite(18, LOW);
+  digitalWrite(21, LOW);
+  digitalWrite(22, LOW);
+  digitalWrite(23, LOW);
+}
+
+
+void callback(char* topic, byte* message, unsigned int length) {
+  Serial.print("Message arrived on topic: ");
+  Serial.print(topic);
+  Serial.print(". Message: ");
+  String messageTemp;
+
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)message[i]);
+    messageTemp += (char)message[i];
+  }
+  Serial.println();
+
+  // If a message is received on the topic esp32/output, you check if the message is either "on" or "off".
+  // Changes the output state according to the message
+  if (String(topic) == "esp32/output") {
+    Serial.print("Changing output to ");
+    if (messageTemp == "on") {
+      Serial.println("on");
+      digitalWrite(ledPin, HIGH);
+    }
+    else if (messageTemp == "off") {
+      Serial.println("off");
+      digitalWrite(ledPin, LOW);
+    }
+  }
+
+   if (String(topic) == "esp32/light") {
+    Serial.print("Changing output to ");
+    if (messageTemp == "on") {
+      turnOnLight();
+      //isManualLight = true;
+    }
+    else if (messageTemp == "off") {
+      turnOffLight();
+      digitalWrite(light,LOW);
+      //isManualLight = false;
+    }
+  }
+
+   if (String(topic) == "esp32/lightAutomat") {
+    Serial.print("Changing output to ");
+    if (messageTemp == "on") {
+      lightAutomat = true;
+    }
+    else if (messageTemp == "off") {
+      lightAutomat = false;
+    }
+  }
+
+   if (String(topic) == "esp32/isAutomat") {
+    
+      if (messageTemp == "on") {
+      isAutomatic = true;
+      Serial.print("Automatic = true");
+    }
+    else if (messageTemp == "off") {
+      isAutomatic = false;
+      Serial.print("Automatic = false");
+    }
+  }
+
+  
+
+  if (String(topic) == "esp32/timeFromAppMin") {
+    Serial.print("Changing output to ");
+    minTimeString =  messageTemp;
+
+    minTime = stringToTime(minTimeString);
+    
+    Serial.print(minTime);
+    }
+
+     if (String(topic) == "esp32/timeFromAppMax") {
+    Serial.print("Changing output to ");
+    maxTimeString =  messageTemp;
+
+    maxTime = stringToTime(maxTimeString);
+    Serial.print(maxTime);
+    }
+
+
+     if (String(topic) == "esp32/lightTimeFromAppMin") {
+    Serial.print("Changing output to ");
+    minTimeLightString =  messageTemp;
+
+    minTimeLight = stringToTime(minTimeLightString);
+    
+    Serial.print(minTimeLight);
+    }
+
+     if (String(topic) == "esp32/lightTimeFromAppMax") {
+    Serial.print("Changing output to ");
+    maxTimeLightString =  messageTemp;
+
+    maxTimeLight = stringToTime(maxTimeLightString);
+    Serial.print(maxTimeLight);
+    }
+
+  if (String(topic) == "esp32/waterPump1On") {
+    if(waterLevelIndicator()== HIGH){
+       waterPumpOn(waterPump1);
+    }
+  
+  }
+  if (String(topic) == "esp32/waterPump2On") {
+    if(waterLevelIndicator()== HIGH){
+      waterPumpOn2();
+    }
+  }
+
+    if (String(topic) == "esp32/isTimeAuto") {
+    Serial.print("Changing output to ");
+    if (messageTemp == "on") {
+     isTimeAuto = true;
+       Serial.println("Rozjebem ta");
+            Serial.println("Rozjebem ta");
+            Serial.println("Rozjebem ta");
+            Serial.println("Rozjebem ta");
+            Serial.println("Rozjebem ta");
+            Serial.println("Rozjebem ta");
+    }
+    else if (messageTemp == "off") {
+      isTimeAuto = false;
+        Serial.println("Rozjebem ta");
+            Serial.println("Rozjebem ta riadne ");
+            Serial.println("Rozjebem ta riadne ");
+            Serial.println("Rozjebem ta riadne ");
+            Serial.println("Rozjebem ta riadne ");
+            Serial.println("Rozjebem ta riadne ");
+            Serial.println("Rozjebem ta");
+            Serial.println("Rozjebem ta");
+            Serial.println("Rozjebem ta");
+            Serial.println("Rozjebem ta");
+    }  
+  }
+
+   if (String(topic) == "esp32/blower") {
+    Serial.print("Changing output to ");
+    if (messageTemp == "on") {
+      Serial.println("on");
+      digitalWrite(blower, HIGH);
+    }
+    else if (messageTemp == "off") {
+      Serial.println("off");
+     digitalWrite(blower, LOW);
+    }
+  } 
+
+  if (String(topic) == "esp32/getMsg") {
+    Serial.print("Get MSG ;) ");
+    getMsg = true;
+  } 
+
+  
+
+  if (String(topic) == "esp32/setOptimalSoilHumidity") {
+    Serial.print("messageTemp");
+    optimalHumidity = maxHumudity * ((100 - messageTemp.toFloat()) / 100);
+    opHum = messageTemp.toFloat();
+  }
+
+  
+  if (String(topic) == "esp32/setWaitingTime") {
+    Serial.print("messageTemp");
+    waitingTime = messageTemp.toInt()* 1000;
+    
+  }
+}
+
+void reconnect() {
+  // Loop until we're reconnected
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    // Attempt to connect
+    if (client.connect("ESP8266Client")) {
+      Serial.println("connected");
+      // Subscribe
+      client.subscribe("esp32/output");
+      client.subscribe("esp32/setOptimalSoilHumidity");
+      client.subscribe("esp32/getMsg");
+      client.subscribe("esp32/waterPump1On");
+      client.subscribe("esp32/waterPump2On");
+      client.subscribe("esp32/blower");
+      client.subscribe("esp32/timeFromAppMax");
+      client.subscribe("esp32/timeFromAppMin");
+      client.subscribe("esp32/light");
+     client.subscribe("esp32/lightTimeFromAppMax");
+      client.subscribe("esp32/lightTimeFromAppMin");
+      client.subscribe("esp32/isAutomat");
+      client.subscribe("esp32/setWaitingTime");
+      client.subscribe("esp32/lightAutomat");
+      client.subscribe("esp32/isTimeAuto");
+      
+      
+      
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
+  }
+}
+
+
+void temperatureCheck() {
+  airHumidity = dht.readHumidity();
+  airTemperature = dht.readTemperature();
+  airTemperatureCheck = dht.readTemperature(true);
+
+
+  if (isnan(airHumidity) || isnan(airTemperature) || isnan(airTemperatureCheck)) {
+    Serial.println(F("Failed to read from DHT sensor!"));
+    return;
+  }
+  float hif = dht.computeHeatIndex(airTemperatureCheck, airHumidity);
+  float hic = dht.computeHeatIndex(airTemperature, airHumidity, false);
+  Serial.print(F("Humidity: "));
+  Serial.print(airHumidity);
+  Serial.print(F("%  Temperature: "));
+  Serial.print(airTemperature);
+  Serial.print(F("°C "));
+  Serial.print(airTemperatureCheck);
+  Serial.print(F("°F  Heat index: "));
+  Serial.print(hic);
+  Serial.print(F("°C "));
+  Serial.print(hif);
+  Serial.println(F("°F"));
+}
+
+
+void setup()
+{
+  Serial.begin(9600);
+  
+  setIOpins();
+  ConnectToWifi();
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+   printLocalTime();
+  client.setServer(mqtt_server, 1883);
+  client.setCallback(callback);
+  Serial.println(F("DHTxx test!"));
+  sensors.begin();
+  dht.begin();
+}
+
+void loop() {
+  
+check:
+
+
+ printLocalTime();
+ Serial.println(isTimeAuto);
+ Serial.println(minTime);
+ Serial.println(maxTime);
+ Serial.println("000000000000000000000000000000000000000000000000000000");
+ Serial.println(lightAutomat);
+ Serial.println(minTimeLightString);
+ Serial.println(maxTimeLightString);
+ 
+// Serial.println("actualTimeSTRING: ");
+//Serial.println(actualTimeString);
+//
+// Serial.println("actualTime: ");
+//Serial.println(actualTime);
+ Serial.println(isAutomatic);
+ Serial.println(isAutomatic);
+ Serial.println(isAutomatic);
+ Serial.println(isAutomatic);
+ soilTemerature();
+  temperatureCheck();
+  //digitalWrite(waterPump1, LOW);
+  soilHumidity1 = soilCheck(moistureSensor1);
+  soilHumidity2 = soilCheck(moistureSensor2);
+  
+ if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+  long now = millis();
+  if (now - lastMsg > 2000) {
+    lastMsg = now;
+
+    long now1 = millis();
+    
+    if (((unsigned long)(millis() - previousMillis1) >= waitingTime) || getMsg == true) {
+    previousMillis1 = millis();
+         
+    //posielanie Vlhkosti vzduchu
+    char airHumString[8];
+    dtostrf(airHumidity, 1, 2, airHumString);
+    //Serial.print("Air humidity: ");
+    //Serial.println(airHumString);
+    client.publish("esp32/airHumidity", airHumString);
+    
+    //posielanie teploty vzduchu
+    char airTempString[8];
+    dtostrf(airTemperature, 1, 2, airTempString);
+    //Serial.print("Air Temperature: ");
+    //Serial.println(airTempString);
+    client.publish("esp32/airTemperature", airTempString);
+
+    float soHum1 = ((maxHumudity - soilHumidity1) * 100)/ maxHumudity;
+    //posielanie Vlhkosti senzor 1
+    char soilHumiditySensor1[8];
+    dtostrf(soHum1, 1, 2, soilHumiditySensor1);
+    //Serial.print("Soil Humidity 1: ");
+    //Serial.println(soilHumiditySensor1);
+    client.publish("esp32/soilHum1", soilHumiditySensor1);
+    
+    float soHum2 = ((maxHumudity - soilHumidity2) * 100)/ maxHumudity;
+    //posielanie Vlhkosti senzor 2
+    char soilHumiditySensor2[8];
+    dtostrf(soHum2, 1, 2, soilHumiditySensor2);
+    //Serial.print("Soil Humidity 2: ");
+    ///Serial.println(soilHumiditySensor2);
+    client.publish("esp32/soilHum2", soilHumiditySensor2);
+
+    //posielanie teploty pody
+    char soilTempString[8];
+    dtostrf(soilTemperatureC, 1, 2, soilTempString);
+    //Serial.print("Soil temperature: ");
+    //Serial.println(soilTempString);
+    client.publish("esp32/soilTemperature", soilTempString);
+
+    char waterLeverSens[8];
+    dtostrf(waterLevel, 1, 2, waterLeverSens);
+   // Serial.print("1 = full, 0 = empty .... Water: ");
+    //Serial.println(waterLevel);
+    client.publish("esp32/waterLevel", waterLeverSens);
+    }
+
+      
+    char getOptSoilHum[8];
+    dtostrf(opHum, 1, 2, getOptSoilHum);
+    //Serial.print("1 = full, 0 = empty .... Water: ");
+    //Serial.println(opHum);
+    client.publish("esp32/getOptSoilHum", getOptSoilHum);
+    getMsg=false;
+  }
+
+  if(lightAutomat == true){
+      if((actualTime >= minTimeLight) && (actualTime <= maxTimeLight)){
+        turnOnLight();
+        }else{
+          turnOffLight();
+        }
+    }
+  
+ 
+  //Serial.println("Opimal:");
+  //Serial.println(optimalHumidity);
+  if((isAutomatic == true)){
+           if(isTimeAuto == true){
+          
+                if((actualTime >= minTime) && (actualTime <= maxTime)){
+                Serial.println(minTime);
+                Serial.println(maxTime);
+                
+                if(waterLevelIndicator()== HIGH){
+                  waterLevel = 1;
+                  if(soilHumidity1 > optimalHumidity){
+                    waterPumpOn(waterPump1);
+                    Serial.println("1. senzor polievame");
+                    delay(4000);
+                    goto check;
+                  }else{
+                    Serial.println("1. senzor OK");
+                  }
+                  
+                  if(soilHumidity2 > optimalHumidity){
+                    //waterPumpOn(waterPump2);
+                    waterPumpOn2();
+                    Serial.println("2. senzor polievame");
+                    delay(4000);
+                    goto check;
+                  }else{
+                    Serial.println("2. senzor OK");
+                  }   
+                }else{
+                  waterLevel = 0;
+                  Serial.println("Nedostatok vody");
+                }
+                delay(500);
+        }else{
+        Serial.println("Mino casu");
+        
+        Serial.println("Mino casu");
+        
+        Serial.println("Mino casu");
+        
+        Serial.println("Mino casu");
+        
+        Serial.println("Mino casu");
+        
+        Serial.println("Mino casu");
+        
+        Serial.println("Mino casu");
+        }
+        }else{
+          Serial.println("Kurva");
+          Serial.println("Kurva");
+          Serial.println("Kurva");
+          Serial.println("Kurva");
+          Serial.println("Kurva");
+            if(waterLevelIndicator()== HIGH){
+            waterLevel = 1;
+            if(soilHumidity1 > optimalHumidity){
+              waterPumpOn(waterPump1);
+              Serial.println("1. senzor polievame");
+              delay(4000);
+              goto check;
+            }else{
+              Serial.println("1. senzor OK");
+            }
+            
+            if(soilHumidity2 > optimalHumidity){
+              //waterPumpOn(waterPump2);
+              waterPumpOn2();
+              Serial.println("2. senzor polievame");
+              delay(4000);
+              goto check;
+            }else{
+              Serial.println("2. senzor OK");
+            }   
+          }else{
+            waterLevel = 0;
+            Serial.println("Nedostatok vody");
+          }
+          delay(500);  
+        }
+        }
+        
+
+}
+
+ 
